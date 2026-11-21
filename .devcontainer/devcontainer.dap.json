@@ -1,0 +1,56 @@
+{
+  "name": "bifrost",
+  "image": "mcr.microsoft.com/devcontainers/go:1.26-trixie",
+  "remoteUser": "root",
+  "containerUser": "root",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "25" }
+  },
+  "containerEnv": {
+    "GOTOOLCHAIN": "auto",
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "UV_FROZEN": "1",
+    "UV_PYTHON_BIN_DIR": "/usr/local/bin",
+    "UV_LINK_MODE": "copy"
+  },
+  "customizations": {
+    "dap": {
+      "postCacheBuild": [
+        {
+          "description": "Go workspace, Go/npm dependencies, dev tools, uv + Python, warm build caches, prebuilt UI",
+          "command": "bash",
+          "args": [".devcontainer/dap/post-cache-build.sh"],
+          "continueOnError": false
+        },
+        {
+          "description": "Playwright Chromium for E2E tests and agent-browser (optional; skipped if downloads are blocked)",
+          "command": "npx",
+          "args": ["playwright", "install", "--with-deps", "chromium"],
+          "cwd": "tests/e2e",
+          "continueOnError": true
+        }
+      ],
+      "postSessionStart": [
+        {
+          "description": "Re-sync go.work and npm deps if the session branch changed them",
+          "command": "bash",
+          "args": [".devcontainer/dap/post-session-start.sh"]
+        }
+      ],
+      "services": [
+        {
+          "name": "bifrost",
+          "command": "bash .devcontainer/dap/start-bifrost.sh",
+          "port": 8080,
+          "tunnel": true
+        },
+        {
+          "name": "ui-dev",
+          "command": "bash .devcontainer/dap/start-ui-dev.sh",
+          "port": 3000,
+          "required": false
+        }
+      ]
+    }
+  }
+}
